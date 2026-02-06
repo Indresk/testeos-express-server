@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API REST Tester - Products & Carts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #040714 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-left: 5px solid #4facfe;
+            padding-left: 15px;
+        }
+        
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .endpoint-card {
+            background: #f8f9ff;
+            border: 2px solid #e1e8ff;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .endpoint-card:hover {
+            border-color: #4facfe;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.2);
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        
+        .method.GET { background: #4ade80; color: white; }
+        .method.POST { background: #f59e0b; color: white; }
+        .method.PUT { background: #3b82f6; color: white; }
+        .method.DELETE { background: #ef4444; color: white; }
+        
+        .endpoint-path {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 🎯 RESPUESTA DEL SERVIDOR MEJORADA */
+        .response-container {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .response-header {
+            background: #2d2d2d;
+            padding: 12px 20px;
+            color: #00ff88;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .response-status {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .response-error {
+            background: #ef4444 !important;
+        }
+        
+        .response-loading {
+            background: #f59e0b !important;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .response-body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 13px;
+            padding: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            color: #e5e7eb;
+            background: #0d1117;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        
+        .response-body.error {
+            color: #fca5a5;
+        }
+        
+        .response-empty {
+            color: #6b7280;
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+        }
+        
+        .clear-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .clear-btn:hover {
+            background: #4b5563;
+        }
+        
+        @media (max-width: 768px) {
+            .endpoint-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .response-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 API REST Tester</h1>
+            <p>Products & Carts - Express.js Testing Interface con Respuestas Visuales</p>
+        </div>
+
+        <!-- PRODUCTS SECTION -->
+        <div class="section">
+            <h2>📦 Products API</h2>
+            <div class="endpoint-grid">
+                
+                <!-- GET All Products -->
+                <div class="endpoint-card">
+                    <div class="method GET">GET</div>
+                    <div class="endpoint-path">/api/products</div>
+                    <button class="btn" onclick="testGetProducts()">📋 Listar Todos los Productos</button>
+                    <div id="products-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="products-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('products')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="products-body" class="response-body response-empty">Haz clic en el botón para probar el endpoint</div>
+                    </div>
+                </div>
+
+                <!-- GET Product by ID -->
+                <div class="endpoint-card">
+                    <div class="method GET">GET</div>
+                    <div class="endpoint-path">/api/products/:pid</div>
+                    <div class="form-group">
+                        <label>🔢 Product ID:</label>
+                        <input type="number" id="pid-get" placeholder="Ej: 1" min="1">
+                    </div>
+                    <button class="btn" onclick="testGetProductById()">🔍 Obtener Producto</button>
+                    <div id="product-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="product-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('product')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="product-body" class="response-body response-empty">Introduce un ID y haz clic para probar</div>
+                    </div>
+                </div>
+
+                <!-- POST Create Product -->
+                <div class="endpoint-card">
+                    <div class="method POST">POST</div>
+                    <div class="endpoint-path">/api/products</div>
+                    <div class="form-group">
+                        <label>📝 Title:</label>
+                        <input type="text" id="title" placeholder="iPhone 15 Pro">
+                    </div>
+                    <div class="form-group">
+                        <label>📄 Description:</label>
+                        <textarea id="description" placeholder="Smartphone de última generación..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>🔑 Code:</label>
+                        <input type="text" id="code" placeholder="IPH15P">
+                    </div>
+                    <div class="form-group">
+                        <label>💰 Price:</label>
+                        <input type="number" id="price" placeholder="1200" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>📦 Stock:</label>
+                        <input type="number" id="stock" placeholder="50" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>✅ Status:</label>
+                        <select id="status">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>🏷️ Category:</label>
+                        <input type="text" id="category" placeholder="Electrónicos">
+                    </div>
+                    <div class="form-group">
+                        <label>🖼️ Thumbnails (separados por coma):</label>
+                        <input type="text" id="thumbnails" placeholder="img1.jpg,img2.jpg">
+                    </div>
+                    <button class="btn" onclick="testCreateProduct()">➕ Crear Producto</button>
+                    <div id="create-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="create-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('create')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="create-body" class="response-body response-empty">Completa el formulario y prueba</div>
+                    </div>
+                </div>
+
+                <!-- PUT Update Product -->
+                <div class="endpoint-card">
+                    <div class="method PUT">PUT</div>
+                    <div class="endpoint-path">/api/products/:pid</div>
+                    <div class="form-group">
+                        <label>🔢 Product ID:</label>
+                        <input type="number" id="pid-put" placeholder="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>⚙️ Action:</label>
+                        <select id="update-action">
+                            <option value="title">Actualizar Titulo</option>
+                            <option value="description">Actualizar Descripción</option>
+                            <option value="price">Actualizar Precio</option>
+                            <option value="status">Actualizar Status</option>
+                            <option value="category">Actualizar Categoria</option>
+                            <option value="addStock">Añadir Stock</option>
+                            <option value="removeStock">Remover Stock</option>
+                            <option value="addThumb">Añadir Thumbnail</option>
+                            <option value="removeThumb">Remover Thumbnail</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 Value:</label>
+                        <input type="text" id="update-value" placeholder="Texto | Número | URL">
+                    </div>
+                    <button class="btn" onclick="testUpdateProduct()">🔄 Actualizar Producto</button>
+                    <div id="update-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="update-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('update')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="update-body" class="response-body response-empty">Selecciona acción y prueba</div>
+                    </div>
+                </div>
+
+                <!-- DELETE Product -->
+                <div class="endpoint-card">
+                    <div class="method DELETE">DELETE</div>
+                    <div class="endpoint-path">/api/products/:pid</div>
+                    <div class="form-group">
+                        <label>🔢 Product ID:</label>
+                        <input type="number" id="pid-delete" placeholder="1" min="1">
+                    </div>
+                    <button class="btn" onclick="testDeleteProduct()">🗑️ Eliminar Producto</button>
+                    <div id="delete-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="delete-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('delete')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="delete-body" class="response-body response-empty">Introduce ID y elimina</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- CARTS SECTION -->
+        <div class="section">
+            <h2>🛒 Carts API</h2>
+            <div class="endpoint-grid">
+                
+                <!-- GET Cart by ID -->
+                <div class="endpoint-card">
+                    <div class="method GET">GET</div>
+                    <div class="endpoint-path">/api/carts/:cid</div>
+                    <div class="form-group">
+                        <label>🛒 Cart ID:</label>
+                        <input type="text" id="cid-get" placeholder="cart1">
+                    </div>
+                    <button class="btn" onclick="testGetCart()">👁️ Ver Carrito</button>
+                    <div id="cart-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="cart-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('cart')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="cart-body" class="response-body response-empty">Introduce Cart ID y prueba</div>
+                    </div>
+                </div>
+
+                <!-- POST Create Cart -->
+                <div class="endpoint-card">
+                    <div class="method POST">POST</div>
+                    <div class="endpoint-path">/api/carts</div>
+                    <button class="btn" onclick="testCreateCart()">🆕 Crear Carrito</button>
+                    <div id="cart-create-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="cart-create-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('cart-create')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="cart-create-body" class="response-body response-empty">Haz clic para crear un carrito</div>
+                    </div>
+                </div>
+
+                <!-- POST Add Product to Cart -->
+                <div class="endpoint-card">
+                    <div class="method POST">POST</div>
+                    <div class="endpoint-path">/api/carts/:cid/product/:pid</div>
+                    <div class="form-group">
+                        <label>🛒 Cart ID:</label>
+                        <input type="text" id="cid-add" placeholder="cart1">
+                    </div>
+                    <div class="form-group">
+                        <label>🔢 Product ID:</label>
+                        <input type="number" id="pid-add" placeholder="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>📊 Quantity:</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <button class="btn" onclick="testAddProductToCart()">➕ Agregar al Carrito</button>
+                    <div id="cart-add-response" class="response-container" style="display: none;">
+                        <div class="response-header">
+                            <span>📊 Respuesta del Servidor</span>
+                            <div>
+                                <span id="cart-add-status" class="response-status">Esperando...</span>
+                                <button class="clear-btn" onclick="clearResponse('cart-add')">Limpiar</button>
+                            </div>
+                        </div>
+                        <div id="cart-add-body" class="response-body response-empty">Completa los campos y prueba</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        async function apiRequest(endpoint, options = {}) {
+            const responseId = options.responseId || 'products';
+            const statusEl = document.getElementById(`${responseId}-status`);
+            const bodyEl = document.getElementById(`${responseId}-body`);
+            const containerEl = document.getElementById(`${responseId}-response`);
+            
+            try {
+                // Mostrar loading
+                statusEl.textContent = 'Loading...';
+                statusEl.className = 'response-status response-loading';
+                bodyEl.textContent = 'Cargando respuesta del servidor...';
+                containerEl.style.display = 'block';
+
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: options.method || 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: options.body ? JSON.stringify(options.body) : null
+                });
+
+                const data = await response.text(); // Primero texto para manejar errores
+                let parsedData;
+                
+                try {
+                    parsedData = JSON.parse(data);
+                } catch {
+                    parsedData = data; // Si no es JSON, mostrar como texto
+                }
+
+                // Éxito
+                statusEl.textContent = `Status: ${response.status}`;
+                statusEl.className = response.ok ? 'response-status' : 'response-status response-error';
+                bodyEl.textContent = JSON.stringify(parsedData, null, 2);
+                bodyEl.className = response.ok ? 'response-body' : 'response-body error';
+                
+            } catch (error) {
+                statusEl.textContent = 'Status: 500';
+                statusEl.className = 'response-status response-error';
+                bodyEl.textContent = `Error de red:\n${error.message}`;
+                bodyEl.className = 'response-body error';
+                console.error('API Error:', error);
+            }
+        }
+
+        function clearResponse(responseId) {
+            const container = document.getElementById(`${responseId}-response`);
+            const statusEl = document.getElementById(`${responseId}-status`);
+            const bodyEl = document.getElementById(`${responseId}-body`);
+            
+            container.style.display = 'none';
+            statusEl.textContent = 'Esperando...';
+            bodyEl.textContent = 'Haz clic en el botón para probar el endpoint';
+            bodyEl.className = 'response-body response-empty';
+        }
+
+        // PRODUCTS ENDPOINTS
+        async function testGetProducts() {
+            await apiRequest('/products', { responseId: 'products' });
+        }
+
+        async function testGetProductById() {
+            const pid = document.getElementById('pid-get').value;
+            if (!pid) return alert('❌ Ingresa un Product ID');
+            await apiRequest(`/products/${pid}`, { responseId: 'product' });
+        }
+
+        async function testCreateProduct() {
+            const productData = {
+                title: document.getElementById('title').value || 'Sin título',
+                description: document.getElementById('description').value || 'Sin descripción',
+                code: document.getElementById('code').value || 'NOCODE',
+                price: parseFloat(document.getElementById('price').value) || 0,
+                status: document.getElementById('status').value === 'true',
+                stock: parseInt(document.getElementById('stock').value) || 0,
+                category: document.getElementById('category').value || 'Sin categoría',
+                thumbnails: document.getElementById('thumbnails').value 
+                    ? document.getElementById('thumbnails').value.split(',').map(t => t.trim()).filter(t => t)
+                    : []
+            };
+            
+            await apiRequest('/products', {
+                method: 'POST',
+                body: productData,
+                responseId: 'create'
+            });
+        }
+
+        async function testUpdateProduct() {
+            const pid = document.getElementById('pid-put').value;
+            const action = document.getElementById('update-action').value;
+            const value = document.getElementById('update-value').value;
+            
+            if (!pid || !value) return alert('❌ Completa Product ID y Value');
+            
+            await apiRequest(`/products/${pid}`, {
+                method: 'PUT',
+                body: { action, value },
+                responseId: 'update'
+            });
+        }
+
+        async function testDeleteProduct() {
+            const pid = document.getElementById('pid-delete').value;
+            if (!pid) return alert('❌ Ingresa un Product ID');
+            await apiRequest(`/products/${pid}`, { 
+                method: 'DELETE',
+                responseId: 'delete'
+            });
+        }
+
+        // CARTS ENDPOINTS
+        async function testGetCart() {
+            const cid = document.getElementById('cid-get').value;
+            if (!cid) return alert('❌ Ingresa un Cart ID');
+            await apiRequest(`/carts/${cid}`, { responseId: 'cart' });
+        }
+
+        async function testCreateCart() {
+            await apiRequest('/carts', { 
+                method: 'POST',
+                responseId: 'cart-create'
+            });
+        }
+
+        async function testAddProductToCart() {
+            const cid = document.getElementById('cid-add').value;
+            const pid = document.getElementById('pid-add').value;
+            const quantity = document.getElementById('quantity').value;
+            
+            if (!cid || !pid) return alert('❌ Completa Cart ID y Product ID');
+            
+            await apiRequest(`/carts/${cid}/product/${pid}`, {
+                method: 'POST',
+                body: { quantity: parseInt(quantity) || 1 },
+                responseId: 'cart-add'
+            });
+        }
+    </script>
+</body>
+</html>
