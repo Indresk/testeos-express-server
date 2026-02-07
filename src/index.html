@@ -236,6 +236,26 @@
         .clear-btn:hover {
             background: #4b5563;
         }
+
+        .placeholder-Button{
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            border: none;
+            background-color: #374151;
+            color: white;
+            vertical-align: bottom;
+            height: 34px;
+            transition: all ease 1s;
+        }
+        .placeholder-Button:hover{
+            background-color: #040714;
+            transform:scale(1.02);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
         
         @media (max-width: 768px) {
             .endpoint-grid {
@@ -307,6 +327,7 @@
                 <!-- POST Create Product -->
                 <div class="endpoint-card">
                     <div class="method POST">POST</div>
+                    <button class="placeholder-Button" onclick="addPlaceHolders()" id="placeholder-Post-Prods">Generar placeholders  ⟵</button>
                     <div class="endpoint-path">/api/products</div>
                     <div class="form-group">
                         <label>📝 Title:</label>
@@ -343,6 +364,7 @@
                         <label>🖼️ Thumbnails (separados por coma):</label>
                         <input type="text" id="thumbnails" placeholder="img1.jpg,img2.jpg">
                     </div>
+                    <button class="placeholder-Button" style="width: 100%; margin-bottom: .5rem; border-radius: 10px;" onclick="addPlaceHolders()" id="placeholder-Post-Prods">Generar placeholders  ⟵</button>
                     <button class="btn" onclick="testCreateProduct()">➕ Crear Producto</button>
                     <div id="create-response" class="response-container" style="display: none;">
                         <div class="response-header">
@@ -430,7 +452,7 @@
                     <div class="endpoint-path">/api/carts/:cid</div>
                     <div class="form-group">
                         <label>🛒 Cart ID:</label>
-                        <input type="text" id="cid-get" placeholder="cart1">
+                        <input type="text" id="cid-get" placeholder="1">
                     </div>
                     <button class="btn" onclick="testGetCart()">👁️ Ver Carrito</button>
                     <div id="cart-response" class="response-container" style="display: none;">
@@ -468,7 +490,7 @@
                     <div class="endpoint-path">/api/carts/:cid/product/:pid</div>
                     <div class="form-group">
                         <label>🛒 Cart ID:</label>
-                        <input type="text" id="cid-add" placeholder="cart1">
+                        <input type="text" id="cid-add" placeholder="1">
                     </div>
                     <div class="form-group">
                         <label>🔢 Product ID:</label>
@@ -635,6 +657,45 @@
                 body: { quantity: parseInt(quantity) || 1 },
                 responseId: 'cart-add'
             });
+        }
+
+        // contenido placeholder para probar productos
+
+        function randText(len) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ';
+            let s = '';
+            for (let i = 0; i < len; i++) {
+                s += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            // Capitalizar la primera letra para mejor aspecto
+            if (s.length > 0) s = s.charAt(0).toUpperCase() + s.slice(1);
+            return s.trim();
+        }
+
+        function randNum(min, max, decimals) {
+            const n = Math.random() * (max - min) + min;
+            return decimals ? parseFloat(n.toFixed(decimals)) : Math.floor(n);
+        }
+
+        function randThumbnails() {
+            const imgs = [
+                'https://picsum.photos/seed/' + Math.random().toString(36).substring(2, 7) + '/200/200',
+                'https://picsum.photos/seed/' + Math.random().toString(36).substring(2, 7) + '/200/200',
+                'https://picsum.photos/seed/' + Math.random().toString(36).substring(2, 7) + '/200/200'
+            ];
+            return imgs.slice(0, Math.floor(Math.random() * imgs.length) + 1).join(',');
+        }
+
+        function addPlaceHolders(){
+            const catList = ['Electrónica', 'Ropa', 'Hogar', 'Deportes', 'Accesorios'];
+            document.querySelector('#title').value = randText(12)
+            document.querySelector('#description').value = randText(28)
+            document.querySelector('#code').value = 'PR-' + Math.floor(Math.random() * 9000 + 1000);
+            document.querySelector('#price').value = randNum(1, 9999, 0);
+            document.querySelector('#stock').value = randNum(1, 99, 0);
+            document.querySelector('#status').value = Math.random() > 0.5 ? 'true' : 'false';
+            document.querySelector('#category').value = catList[Math.floor(Math.random() * catList.length)];
+            document.querySelector('#thumbnails').value = randThumbnails();
         }
     </script>
 </body>

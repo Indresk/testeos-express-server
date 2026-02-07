@@ -1,5 +1,8 @@
-class Product{
+const IdModule = require('./idModule')
+
+class Product extends IdModule{
     constructor(id=0,title="titulo",description="desc",code=1,price=1,status=false,stock=1,category="no-cat",thumbnail=[]){
+        super();
         this.id = id
         this.title = title
         this.description = description
@@ -13,11 +16,17 @@ class Product{
 
     // metodos de actualización progresiva
 
-    addStock(value){ this.stock =+ value; }
+    addStock(value){
+        let valueVerified = parseInt(value)
+        if(isNaN(valueVerified)) throw new Error('El valor provisto para esta propiedad debe ser numerico sin decimales.')
+        this.stock += valueVerified; 
+    }
 
     removeStock(value){ 
-        if(this.stock<value) throw new Error(`No se puede bajar el stock por debajo de 0, el stock actual es ${this.stock}`);
-        this.stock =- value;
+        let valueVerified = parseInt(value)
+        if(isNaN(valueVerified)) throw new Error('El valor provisto para esta propiedad debe ser numerico sin decimales.')
+        if(this.stock<valueVerified) throw new Error(`No se puede bajar el stock por debajo de 0, el stock actual es ${this.stock}`);
+        this.stock -= valueVerified;
     }
 
     addThumbnail(url){ this.thumbnail.push(url) }
@@ -34,33 +43,19 @@ class Product{
 
     updateDescription(newDesc){ this.description = newDesc }
 
-    updatePrice(newPrice){ this.price = newPrice }
+    updatePrice(newPrice){ 
+        let priceVerified = parseInt(newPrice)
+        if(isNaN(priceVerified)) throw new Error('El valor provisto para esta propiedad debe ser numerico sin decimales.')
+        this.price = priceVerified 
+    }
 
-    updateStatus(newStatus){ this.status = newStatus; }
+    updateStatus(newStatus){ 
+        let statusVerified = false
+        if(newStatus.toLowerCase() === "active") statusVerified = true;
+        this.status = statusVerified; 
+    }
 
     updateCategory(newCategory){ this.category = newCategory; }
-
-    // seteo de ID
-
-    async setID(products){
-        try {
-            const ids = products.map((p)=>p.id).sort((a,b) => a-b);
-            this.id = this.#findFreeId(ids)
-        } catch (error) {
-            console.log(`Error en el seteo de ID del producto: `,error.message)
-        }
-    }
-
-    #findFreeId(ids){
-        if (ids.length === 0) return 1;
-        for (let i = 0; i < ids.length; i++) {
-            const expected = i + 1;
-            if (ids[i] !== expected) {
-                return expected;
-            }
-        }
-        return ids[ids.length - 1] + 1;
-    }
 }
 
 module.exports = Product;

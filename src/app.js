@@ -2,15 +2,18 @@ const express = require('express');
 const open = require('open');
 const path = require('path');
 const ProductManager = require('./class/ProductManager')
+const CartManager = require('./class/CartManager')
 
 const puerto = 8080;
-const dbPath = path.join(__dirname, 'db', 'db.json');
+const dbPath = path.join(__dirname, 'db/prods', 'products-db.json');
+const cartDBPath = path.join(__dirname, 'db/carts', 'carts-db.json');
 const productManager = new ProductManager(dbPath)
+const cartManager = new CartManager(cartDBPath,productManager)
 
 const app = express()
 app.use(express.json())
 
-//html de testeos
+//html de testeos - forma generada con IA (queria algo mas bonito que postman para irlo probando mientras lo armaba)
 
 app.get("/",(req,res)=>{
     res.status(200).sendFile(path.join(__dirname,'index.html'))
@@ -19,54 +22,59 @@ app.get("/",(req,res)=>{
 // products
 
 app.get("/api/products",async (req,res)=>{
-    const products = await productManager.getProducts()
-    res.status(200).send(JSON.stringify(products))
+    const internalResponse = await productManager.getProducts()
+    const responseStatus = internalResponse.status === "success"?200:404  
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 app.get("/api/products/:pid",async (req,res)=>{
-    const products = await productManager.getProducts(req.params.pid)
-    res.status(200).send(JSON.stringify(products))
+    const internalResponse = await productManager.getProducts(req.params.pid)
+    const responseStatus = internalResponse.status === "success"?200:404  
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 
 app.post("/api/products",async (req,res)=>{
     const body = req.body
     const internalResponse = await productManager.createProduct(body.title,body.description,body.code,body.price,body.status,body.stock,body.category,body.thumbnails)
-    res.status(201).send(JSON.stringify(internalResponse))
+    const responseStatus = internalResponse.status === "success"?201:404 
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 
 app.put("/api/products/:pid",async (req,res)=>{
     const body = req.body
     const internalResponse = await productManager.updateProduct(req.params.pid,body.action,body.value)
-    res.status(200).send(JSON.stringify(internalResponse))
+    const responseStatus = internalResponse.status === "success"?200:404 
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 
 app.delete("/api/products/:pid",async (req,res)=>{
     const internalResponse = await productManager.deleteProduct(req.params.pid)
-    res.status(200).send(JSON.stringify(internalResponse))
+    const responseStatus = internalResponse.status === "success"?200:404
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 
 // cart
 
 app.get("/api/carts/:cid",async (req,res)=>{
-    // Debe listar los productos que pertenecen al carrito con el cid proporcionado.
-    res.status(200).sendFile()
+    const internalResponse = await cartManager.getCarts(req.params.cid)
+    const responseStatus = internalResponse.status === "success"?200:404    
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 
 app.post("/api/carts",async (req,res)=>{
-    //  Debe crear un nuevo carrito con la siguiente estructura:
-        // id: Number/String (Autogenerado para asegurar que nunca se dupliquen los ids).
-        // products: Array que contendrá objetos que representen cada producto.
-    res.status(201).send('product Created')
+    const internalResponse = await cartManager.createCart()
+    const responseStatus = internalResponse.status === "success"?201:404    
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
 app.post("/api/carts/:cid/product/:pid",async (req,res)=>{
-    // Debe agregar el producto al arreglo products del carrito seleccionado, utilizando el siguiente formato:
-    //     product: Solo debe contener el ID del producto.
-    //     quantity: Debe contener el número de ejemplares de dicho producto (se agregará de uno en uno).
-    //     Si un producto ya existente intenta agregarse, se debe incrementar el campo quantity de dicho producto.
-    res.status(201).send('product Created')
+    const internalResponse = await cartManager.addProdToCart(req.params.cid,req.params.pid,req.body.quantity)
+    const responseStatus = internalResponse.status === "success"?201:404
+    res.status(responseStatus).send(JSON.stringify(internalResponse))
 })
+
+// escuchar puerto
 
 app.listen(puerto,()=>{
     console.log(`Servidor levantado en el puerto ${puerto}`)
-    //open.openApp(`http://localhost:${puerto}`)
+    // open.openApp(`http://localhost:${puerto}`)
 })
 

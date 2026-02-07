@@ -6,15 +6,16 @@ class DBManager{
         this.db = pointingDB || ''
         this.availableDBs = []
 
-        this.#loadAvailableDBs();
+        this.#init();
     }
 
     // metodos de mantenimiento
 
+        // le añadi la opción de recibir nombre y ruta por aparte por si quisiera crear un archivo db fuera de la inicialización, no es realmente necesario
     async createDB(fileName,containerRoute){
         try {
-            if(!containerRoute)containerRoute = "../db"
             const filePath = await this.#writeFile({fileName:fileName,containerRoute:containerRoute,data:JSON.stringify([], null, 2),newFile:true})
+            if (!this.availableDBs.includes(filePath)) this.availableDBs.push(filePath);
             this.db = filePath
             this.consultDBs()
         } catch (error) {
@@ -83,11 +84,13 @@ class DBManager{
         }
     }
 
-    async #writeFile({fileName,containerRoute = "../db", data = "", allowOveride = false,newFile=false}) {
+    async #writeFile({fileName,containerRoute="../db", data = "", allowOveride = false,newFile=false}) {
         let filePath = ""
         
         if(newFile){
             filePath = path.isAbsolute(containerRoute)?path.join(containerRoute, fileName): path.resolve(__dirname, containerRoute, fileName);
+            const dirPath = path.dirname(filePath);
+            await fs.mkdir(dirPath, { recursive: true });
         }
         else{
             filePath = this.db
@@ -99,7 +102,6 @@ class DBManager{
             } else {
                 await fs.writeFile(filePath, data);
             }
-            if (!this.availableDBs.includes(filePath)) this.availableDBs.push(filePath);
             return filePath
 
         } catch (error) {
@@ -112,6 +114,11 @@ class DBManager{
 
     // metodo de inicialización
 
+    async #init(){
+        await this.#createFirstDB();
+        await this.#loadAvailableDBs();
+    }
+
     async #loadAvailableDBs() {
         try {
             const dirPath = path.dirname(this.db);
@@ -120,6 +127,18 @@ class DBManager{
             if(this.availableDBs.length !== 0)this.consultDBs();
         } catch (error) {
             console.error(`Error cargando availableDBs: ${error.message}`);
+        }
+    }
+
+    async #createFirstDB(){
+        try{
+            await this.readFile()
+        }
+        catch(error){
+            console.log(`Archivo inexistente ${error.message} \nCrearemos el archivo ${this.db}`)
+            const fileName = path.basename(this.db)
+            const dbSubPath = path.dirname(this.db);
+            await this.createDB(fileName,dbSubPath)
         }
     }
 }

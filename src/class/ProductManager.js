@@ -1,4 +1,3 @@
-const path = require('path');
 const Product = require('./product')
 const DBManager = require('./DBManager')
 
@@ -9,8 +8,6 @@ class ProductManager{
         this.products = []
         this.#DBManager = new DBManager(pointingDB);
         this.#prodInit = false
-
-        this.#createFirstDB(pointingDB)
     }   
 
     // metodos de manipulación
@@ -19,9 +16,16 @@ class ProductManager{
         const idFixed = parseInt(id)
         if(!this.#prodInit){await this.#initProducts();this.#prodInit=true}
         if(!idFixed){
-            console.log(`\nEstos son los productos actualmente almacenados`)
-            this.#consoleDisplayProducts();
-            return {status: "success", message: `Productos actualmente almacenados entregados satisfactoriamente`,content:this.products}
+            try {
+                if(this.products.length === 0)throw new Error("No hay ningún producto actualmente creado.")
+                console.log(`\nEstos son los productos actualmente almacenados`)
+                this.#consoleDisplayProducts();
+                return {status: "success", message: `Productos actualmente almacenados entregados satisfactoriamente`,content:this.products}
+            } catch (error) {
+                console.log(`\nError buscando los productos: ${error.message}`)
+                return {status: "failed", message:`Error buscando los productos: ${error.message}`}
+            }
+            
         }
         else{
             try{
@@ -103,29 +107,18 @@ class ProductManager{
     }
 
     
-    // metodos de iniciación
+    // metodos de inicialización
     async #initProducts(){
         try {
             console.log('Inicializando productos...')
             const temporalProds = await this.#DBManager.readFile()
             if(temporalProds.length !== 0){
-            this.products = temporalProds.map(prod => new Product(prod.id,prod.title,prod.description,prod.code,prod.price,prod.status,prod.stock,prod.category,prod.thumbnail,this.#DBManager));
+            this.products = temporalProds.map(prod => new Product(prod.id,prod.title,prod.description,prod.code,prod.price,prod.status,prod.stock,prod.category,prod.thumbnail));
             console.log(`Productos del archivo almacenados en memoria exitosamente: \n`)
             this.#consoleDisplayProducts()}
             else{console.log(`El archivo no tiene actualmente ningún producto.`)}
         } catch (error) {
-            console.log('No se pudieron obtener los productos guardados.')
-        }
-    }
-
-    async #createFirstDB(pointingDB){
-        try{
-            await this.#DBManager.readFile()
-        }
-        catch(error){
-            console.log(`Archivo inexistente ${error.message} \nCrearemos el archivo ${pointingDB}`)
-            const fileName = path.basename(pointingDB)
-            await this.#DBManager.createDB(fileName)
+            console.log('No se pudieron obtener los productos guardados: ',error.message)
         }
     }
 
