@@ -5,8 +5,8 @@ const ProductManager = require('./class/ProductManager')
 const CartManager = require('./class/CartManager')
 
 const puerto = 8080;
-const dbPath = path.join(__dirname, 'db/prods', 'products-db.json');
-const cartDBPath = path.join(__dirname, 'db/carts', 'carts-db.json');
+const dbPath = path.join(__dirname, 'db/prods', 'products.json');
+const cartDBPath = path.join(__dirname, 'db/carts', 'carts.json');
 const productManager = new ProductManager(dbPath)
 const cartManager = new CartManager(cartDBPath,productManager)
 
