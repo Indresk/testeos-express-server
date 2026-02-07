@@ -75,6 +75,6 @@ app.post("/api/carts/:cid/product/:pid",async (req,res)=>{
 
 app.listen(puerto,()=>{
     console.log(`Servidor levantado en el puerto ${puerto}`)
-    // open.openApp(`http://localhost:${puerto}`)
+    open.openApp(`http://localhost:${puerto}`) 
 })
 
