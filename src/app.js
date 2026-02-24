@@ -1,80 +1,59 @@
 const express = require('express');
 const open = require('open');
 const path = require('path');
-const ProductManager = require('./class/ProductManager')
-const CartManager = require('./class/CartManager')
+const handlebars = require('express-handlebars')
+const socketIO = require('socket.io')
+
+const apiCartRouter = require('./router/apiCarts.router.js')
+const apiProdsRouter = require('./router/apiProds.router.js')
+const viewsRouter = require('./router/views.router.js')
+
+const ProductManager = require('./dao/class/ProductManager.js')
+const CartManager = require('./dao/class/CartManager.js')
 
 const puerto = 8080;
-const dbPath = path.join(__dirname, 'db/prods', 'products.json');
-const cartDBPath = path.join(__dirname, 'db/carts', 'carts.json');
+
+const dbPath = path.join(__dirname, 'dao/db/prods', 'products.json');
+const cartDBPath = path.join(__dirname, 'dao/db/carts', 'carts.json');
 const productManager = new ProductManager(dbPath)
 const cartManager = new CartManager(cartDBPath,productManager)
 
 const app = express()
-app.use(express.json())
 
-//html de testeos - forma generada con IA (queria algo mas bonito que postman para irlo probando mientras lo armaba)
+// seteo de handlebars
 
-app.get("/",(req,res)=>{
-    res.status(200).sendFile(path.join(__dirname,'index.html'))
-})
+app.engine("handlebars", handlebars.engine());
+app.set("view engine", "handlebars");
+app.set("views", __dirname + "/views");
+app.set("partials", __dirname + "/views/partials");
 
-// products
+// seteo de directorio estatico
 
-app.get("/api/products",async (req,res)=>{
-    const internalResponse = await productManager.getProducts()
-    const responseStatus = internalResponse.status === "success"?200:404  
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
-app.get("/api/products/:pid",async (req,res)=>{
-    const internalResponse = await productManager.getProducts(req.params.pid)
-    const responseStatus = internalResponse.status === "success"?200:404  
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
+app.use(express.static(__dirname + "/public"));
 
-app.post("/api/products",async (req,res)=>{
-    const body = req.body
-    const internalResponse = await productManager.createProduct(body.title,body.description,body.code,body.price,body.status,body.stock,body.category,body.thumbnails)
-    const responseStatus = internalResponse.status === "success"?201:404 
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
+// seteo de rutas
 
-app.put("/api/products/:pid",async (req,res)=>{
-    const body = req.body
-    const internalResponse = await productManager.updateProduct(req.params.pid,body.action,body.value)
-    const responseStatus = internalResponse.status === "success"?200:404 
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
+app.use("/", viewsRouter({productManager,cartManager}));
+app.use('/api/carts',apiCartRouter({cartManager}))
+app.use('/api/products',apiProdsRouter({productManager}))
 
-app.delete("/api/products/:pid",async (req,res)=>{
-    const internalResponse = await productManager.deleteProduct(req.params.pid)
-    const responseStatus = internalResponse.status === "success"?200:404
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
+// escuchar puerto y seteo de socket
 
-// cart
-
-app.get("/api/carts/:cid",async (req,res)=>{
-    const internalResponse = await cartManager.getCarts(req.params.cid)
-    const responseStatus = internalResponse.status === "success"?200:404    
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
-
-app.post("/api/carts",async (req,res)=>{
-    const internalResponse = await cartManager.createCart()
-    const responseStatus = internalResponse.status === "success"?201:404    
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
-app.post("/api/carts/:cid/product/:pid",async (req,res)=>{
-    const internalResponse = await cartManager.addProdToCart(req.params.cid,req.params.pid,req.body.quantity)
-    const responseStatus = internalResponse.status === "success"?201:404
-    res.status(responseStatus).send(JSON.stringify(internalResponse))
-})
-
-// escuchar puerto
-
-app.listen(puerto,()=>{
+const httpServer = app.listen(puerto,()=>{
     console.log(`Servidor levantado en el puerto ${puerto}`)
-    open.openApp(`http://localhost:${puerto}`) 
+    // open.openApp(`http://localhost:${puerto}`) 
 })
 
+const socketServer = new socketIO.Server(httpServer);
+
+socketServer.on("connection", (client)=>{
+    // client.broadcast.emit("new-user-connected", client.id)
+
+    client.on("get-update", async ({action})=>{
+        const internalResponse = await productManager.getProducts();
+        const prodsToRender = internalResponse.content.map((prod)=>{return {...prod, mainThumb:prod.thumbnail[0]}})
+        socketServer.emit("prods-updated", {prods:prodsToRender, status:internalResponse.status,message:internalResponse.message,action} )
+    })
+})
+
+module.exports = socketServer

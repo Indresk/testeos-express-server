@@ -18,8 +18,7 @@ class ProductManager{
         if(!idFixed){
             try {
                 if(this.products.length === 0)throw new Error("No hay ningún producto actualmente creado.")
-                console.log(`\nEstos son los productos actualmente almacenados`)
-                this.#consoleDisplayProducts();
+                console.log(`\nProductos entregados correctamente`)
                 return {status: "success", message: `Productos actualmente almacenados entregados satisfactoriamente`,content:this.products}
             } catch (error) {
                 console.log(`\nError buscando los productos: ${error.message}`)
