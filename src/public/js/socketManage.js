@@ -1,10 +1,21 @@
 const socket = io();
 
-//pendiente implementar alertas y verificación por estados antes de editar el dom
-
 socket.on("prods-updated", ({prods,status,message,action}) => {
     const container = document.querySelector(".products-rt")
     container.innerHTML = ''
+
+    if(status === 'failed'){
+        Swal.fire({
+            text: `Error actualizando los productos en tiempo real: ${message}.`,
+            toast: true,
+            position: 'top-right',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            icon: 'error'
+        });return
+    }
+
     prods.forEach(prod => {
         const card = document.createElement('div')
         card.className = 'product-preview'
@@ -18,22 +29,18 @@ socket.on("prods-updated", ({prods,status,message,action}) => {
                 <h3>${prod.title}</h3>
                 <p>$${prod.price}</p>
             </div>
-            <button class="btn">Revisar producto</button>
+            <a href="/product/${prod.id}"><button class="btn">Revisar producto</button></a>
         `
         container.appendChild(card)
     });
+
+    Swal.fire({
+        text: `Se ${action==='create'?'creó':'eliminó'} un producto en tiempo real.`,
+        toast: true,
+        position: 'top-right',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        icon: 'success'
+    });
 })
-
-
-
-// socket.on("new-user-connected", (socketId) => {
-//     Swal.fire({
-//         text: `Nuevo participante: ${socketId}`,
-//         toast: true,
-//         position: 'top-right',
-//         showConfirmButton: false,
-//         timer: 3000,
-//         timerProgressBar: true,
-//         icon: 'info'
-//     });
-// });

@@ -1,0 +1,61 @@
+<div class="container">
+    <section>
+      <h2>Detalle de producto</h2>
+
+      <div class="endpoint-grid">
+        <article class="endpoint-card">
+          <h3 class="prod-title">{{product.title}}</h3>
+
+          <p class="prod-description">
+            {{product.description}}
+          </p>
+
+          <div class="prod-meta">
+            <span>Código: {{product.code}}</span>
+            <span>Categoría: {{product.category}}</span>
+            <span>Stock: {{product.stock}} unidades</span>
+            <span>ID interno: {{product.id}}</span>
+          </div>
+
+          <div class="prod-price">
+            $ {{product.price}}
+          </div>
+
+          {{#if product.status}}
+            <div class="prod-status active">
+                Activo
+            </div>
+            {{else}}
+            <div class="prod-status inactive">
+                Inactivo
+            </div>
+          {{/if}}
+
+          <div class="prod-meta">
+            <button class="btn">Agregar al carrito</button>
+            <button class="placeholder-Button">Ver más</button>
+          </div>
+        </article>
+        <article class="endpoint-card">
+            <div class="prod-thumbnails">
+            <img
+              class="main-thumb"
+              src="{{product.mainThumb}}"
+              alt="Main thumbnail del producto TsKTBgUSBJYO"
+            />
+
+            <div class="thumb-gallery">
+              {{#each product.thumbnail}}
+              <img
+                class="thumb"
+                src="{{this}}"
+                alt="Subthumbnail 1 del producto TsKTBgUSBJYO"
+              />
+              {{/each}}
+        
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>

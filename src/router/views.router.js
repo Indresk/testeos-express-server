@@ -1,6 +1,6 @@
 const express = require('express')
 
-module.exports = function ({ productManager,cartManager }) {
+module.exports = function ({ productManager }) {
     const viewsRouter = express.Router()
     viewsRouter.use(express.json())
 
@@ -76,14 +76,25 @@ module.exports = function ({ productManager,cartManager }) {
     // prueba de pagina dedicada con layout especial de producto
 
     viewsRouter.get("/product/:pid", async (req, res) => {
-        res.render("home", {
-            nombre: "",
-            head: {
-                styles: "/css/styles.css",
-                title: "API REST Tester - Products & Carts"
-            },
-            layout: 'product'
-        })
+        const internalResponse = await productManager.getProducts(req.params.pid);
+        switch(internalResponse.status){
+            case 'failed':
+                return res.redirect(`/404?errorMessage=${internalResponse.message}`)
+
+            case 'success':
+                const prodToRender = {...internalResponse.content , mainThumb:internalResponse.content.thumbnail[0]}
+                return res.render("detailProds", {
+                    product: prodToRender,
+                    head: {
+                        styles: "/css/styles.css",
+                        title: "Detalle del producto"
+                    },
+                    layout: 'product'
+                })
+           
+            default:
+                return res.redirect(`/404?errorMessage=${internalResponse.message}`)
+        }
     });
 
     return viewsRouter

@@ -33,7 +33,7 @@ app.use(express.static(__dirname + "/public"));
 
 // seteo de rutas
 
-app.use("/", viewsRouter({productManager,cartManager}));
+app.use("/", viewsRouter({productManager}));
 app.use('/api/carts',apiCartRouter({cartManager}))
 app.use('/api/products',apiProdsRouter({productManager}))
 
