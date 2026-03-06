@@ -1,6 +1,6 @@
 <div class="container">
     <section>
-      <h2>Detalle de producto</h2>
+      <h2>Detalle de producto {{product.title}}</h2>
 
       <div class="endpoint-grid">
         <article class="endpoint-card">
@@ -17,23 +17,27 @@
             <span>ID interno: {{product.id}}</span>
           </div>
 
+          <div style="display: flex; justify-content:space-between">
+
           <div class="prod-price">
             $ {{product.price}}
           </div>
 
           {{#if product.status}}
-            <div class="prod-status active">
+            <div class="prod-status active" style="margin-bottom: 10px;">
                 Activo
             </div>
             {{else}}
-            <div class="prod-status inactive">
+            <div class="prod-status inactive" style="margin-bottom: 10px;">
                 Inactivo
             </div>
           {{/if}}
 
+          </div>
+
           <div class="prod-meta">
             <button class="btn">Agregar al carrito</button>
-            <button class="placeholder-Button">Ver más</button>
+            <a href="/realtimeproducts"><button class="placeholder-Button" style="cursor: pointer;">Volver a productos en tiempo real</button></a>
           </div>
         </article>
         <article class="endpoint-card">

@@ -9,7 +9,7 @@ const apiProdsRouter = require('./router/apiProds.router.js')
 const viewsRouter = require('./router/views.router.js')
 
 const ProductManager = require('./dao/class/ProductManager.js')
-const CartManager = require('./dao/class/CartManager.js')
+const CartManager = require('./dao/class/CartManager.js');
 
 const puerto = 8080;
 
@@ -19,6 +19,15 @@ const productManager = new ProductManager(dbPath)
 const cartManager = new CartManager(cartDBPath,productManager)
 
 const app = express()
+
+// escuchar puerto y seteo de socket
+
+const httpServer = app.listen(puerto,()=>{
+    console.log(`Servidor levantado en el puerto ${puerto}`)
+    open.openApp(`http://localhost:${puerto}`) 
+})
+
+const socketServer = new socketIO.Server(httpServer);
 
 // seteo de handlebars
 
@@ -35,25 +44,4 @@ app.use(express.static(__dirname + "/public"));
 
 app.use("/", viewsRouter({productManager}));
 app.use('/api/carts',apiCartRouter({cartManager}))
-app.use('/api/products',apiProdsRouter({productManager}))
-
-// escuchar puerto y seteo de socket
-
-const httpServer = app.listen(puerto,()=>{
-    console.log(`Servidor levantado en el puerto ${puerto}`)
-    // open.openApp(`http://localhost:${puerto}`) 
-})
-
-const socketServer = new socketIO.Server(httpServer);
-
-socketServer.on("connection", (client)=>{
-    // client.broadcast.emit("new-user-connected", client.id)
-
-    client.on("get-update", async ({action})=>{
-        const internalResponse = await productManager.getProducts();
-        const prodsToRender = internalResponse.content.map((prod)=>{return {...prod, mainThumb:prod.thumbnail[0]}})
-        socketServer.emit("prods-updated", {prods:prodsToRender, status:internalResponse.status,message:internalResponse.message,action} )
-    })
-})
-
-module.exports = socketServer
+app.use('/api/products',apiProdsRouter({productManager,socketServer}))

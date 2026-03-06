@@ -3,6 +3,14 @@ const socket = io();
 socket.on("prods-updated", ({prods,status,message,action}) => {
     const container = document.querySelector(".products-rt")
     container.innerHTML = ''
+    let actionMessage = ''
+
+    switch(action){
+        case 'create': actionMessage = 'creó'; break;
+        case 'delete': actionMessage = 'eliminó'; break;
+        case 'modify': actionMessage = 'modificó'; break;
+        default: status = 'failed'; break;
+    }
 
     if(status === 'failed'){
         Swal.fire({
@@ -35,7 +43,7 @@ socket.on("prods-updated", ({prods,status,message,action}) => {
     });
 
     Swal.fire({
-        text: `Se ${action==='create'?'creó':'eliminó'} un producto en tiempo real.`,
+        text: `Se ${actionMessage} un producto en tiempo real.`,
         toast: true,
         position: 'top-right',
         showConfirmButton: false,

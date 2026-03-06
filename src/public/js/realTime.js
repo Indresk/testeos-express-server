@@ -34,9 +34,8 @@ async function apiRequest(endpoint, options = {}) {
         bodyEl.textContent = JSON.stringify(parsedData, null, 2);
         bodyEl.className = response.ok ? 'response-body' : 'response-body error';
 
-        // Socket
-
-        socket.emit("get-update",{action:responseId});
+        // Socket -- Implementación de actualización en tiempo real por envio de socket directamente
+        // socket.emit("get-update",{action:responseId});
         
     } catch (error) {
         statusEl.textContent = 'Status: 500';
